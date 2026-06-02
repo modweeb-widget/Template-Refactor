@@ -1,24 +1,31 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "wouter";
 import { useAuth } from "../context/AuthContext";
 import Logo from "../components/Logo";
 
 const CLIENT_ID =
   "36053852280-iqmfrcu1m2vd8ai6sc4e10r6afaiiln0.apps.googleusercontent.com";
 
-export default function LoginPage() {
+export type LoginMode = "spa" | "popup" | "standalone";
+
+interface LoginPageProps {
+  mode?: LoginMode;
+  onSuccess?: () => void;
+}
+
+export default function LoginPage({ mode = "spa", onSuccess }: LoginPageProps) {
   const { isLoggedIn, login } = useAuth();
-  const [, navigate] = useLocation();
   const [toast, setToast] = useState("");
   const [loading, setLoading] = useState(false);
   const clientRef = useRef<GoogleTokenClient | null>(null);
 
   useEffect(() => {
-    if (isLoggedIn) {
-      navigate("/account");
-      return;
+    if (!isLoggedIn) return;
+    if (mode === "spa") {
+      window.location.href = "/account";
+    } else if (mode === "standalone") {
+      window.location.href = "/account.html";
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, mode]);
 
   useEffect(() => {
     let attempts = 0;
@@ -58,9 +65,33 @@ export default function LoginPage() {
       );
       if (!res.ok) throw new Error("Failed to fetch user info");
       const data = await res.json();
-      login({ name: data.name, email: data.email, image: data.picture || "" });
+
+      const userData = {
+        name: data.name as string,
+        email: data.email as string,
+        image: (data.picture as string) || "",
+      };
+
+      login(userData);
       showToast("تم تسجيل الدخول بنجاح!");
-      setTimeout(() => navigate("/account"), 800);
+
+      if (mode === "popup") {
+        if (window.opener) {
+          window.opener.postMessage(
+            { type: "loginSuccess", user: userData },
+            "*"
+          );
+        }
+        setTimeout(() => window.close(), 800);
+      } else if (mode === "standalone") {
+        const cbu = new URLSearchParams(window.location.search).get("cbu");
+        const target = cbu ? decodeURIComponent(cbu) : "/account.html";
+        setTimeout(() => { window.location.href = target; }, 800);
+      } else {
+        setTimeout(() => { window.location.href = "/account"; }, 800);
+      }
+
+      onSuccess?.();
     } catch {
       showToast("حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.");
     } finally {
@@ -130,12 +161,12 @@ export default function LoginPage() {
 
         <p className="login-page__terms">
           بالنقر على متابعة، فإنك توافق على{" "}
-          <a href="/p/terms.html" className="login-page__link">
+          <a href="/terms.html" className="login-page__link">
             شروط الخدمة
           </a>{" "}
           و
           <br />
-          <a href="/p/privacy-policy.html" className="login-page__link">
+          <a href="/privacy-policy.html" className="login-page__link">
             سياسة الخصوصية
           </a>
           .

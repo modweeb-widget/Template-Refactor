@@ -1,0 +1,8 @@
+# Cloudflare Pages — Redirects
+# إعادة توجيه من مسارات الـ Blogger القديمة إلى المسارات الجديدة
+/p/login.html     /login.html    301
+/p/account.html   /account.html  301
+
+# توافق مع المسارات النظيفة
+/login            /login.html    301
+/account          /account.html  301

@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import { useLocation } from "wouter";
 import { useAuth } from "../context/AuthContext";
 
 interface Session {
@@ -73,9 +72,12 @@ function saveSessions(sessions: Session[]) {
   localStorage.setItem("userSessions", JSON.stringify(sessions));
 }
 
-export default function AccountPage() {
-  const { user, isLoggedIn, logout, updateProfile } = useAuth();
-  const [, navigate] = useLocation();
+interface AccountPageProps {
+  onLogout?: () => void;
+}
+
+export default function AccountPage({ onLogout }: AccountPageProps = {}) {
+  const { user, logout, updateProfile } = useAuth();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [showSettings, setShowSettings] = useState(false);
   const [editName, setEditName] = useState(user?.name || "");
@@ -89,7 +91,6 @@ export default function AccountPage() {
   }
 
   useEffect(() => {
-    if (!isLoggedIn) return;
     const existing = loadSessions();
     if (!existing.find((s) => s.isCurrent)) {
       const session: Session = {
@@ -99,10 +100,7 @@ export default function AccountPage() {
         ip: "جارٍ التحميل...",
         isCurrent: true,
       };
-      const updated = [
-        ...existing.filter((s) => !s.isCurrent),
-        session,
-      ];
+      const updated = [...existing.filter((s) => !s.isCurrent), session];
       saveSessions(updated);
       setSessions(updated);
       getIP().then((ip) => {
@@ -113,7 +111,7 @@ export default function AccountPage() {
     } else {
       setSessions(existing);
     }
-  }, [isLoggedIn]);
+  }, []);
 
   useEffect(() => {
     function handleOutside(e: MouseEvent) {
@@ -160,36 +158,11 @@ export default function AccountPage() {
 
   function handleLogout() {
     logout();
-    navigate("/");
-  }
-
-  if (!isLoggedIn) {
-    return (
-      <div className="account-page account-page--guest">
-        <div className="alert-card">
-          <div className="alert-card__header">
-            <div className="alert-card__icon">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </div>
-            <h2 className="alert-card__title">لم تسجّل الدخول بعد</h2>
-            <p className="alert-card__desc">
-              سجّل دخولك للوصول إلى بيانات حسابك وإدارة إعداداتك.
-            </p>
-          </div>
-          <div className="alert-card__footer">
-            <button
-              className="acct-btn acct-btn--black"
-              onClick={() => navigate("/login")}
-            >
-              تسجيل الدخول
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    if (onLogout) {
+      onLogout();
+    } else {
+      window.location.href = "/";
+    }
   }
 
   return (
@@ -315,7 +288,9 @@ export default function AccountPage() {
                       <div className="acct-session__os">
                         {session.os}
                         {session.isCurrent && (
-                          <span className="acct-session__badge">الجلسة الحالية</span>
+                          <span className="acct-session__badge">
+                            الجلسة الحالية
+                          </span>
                         )}
                       </div>
                       <div className="acct-session__meta">
@@ -348,10 +323,7 @@ export default function AccountPage() {
             <div className="acct-card__divider" />
 
             <div className="acct-card__footer">
-              <button
-                className="acct-btn acct-btn--outline"
-                onClick={handleLogout}
-              >
+              <button className="acct-btn acct-btn--outline" onClick={handleLogout}>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                   <polyline points="16 17 21 12 16 7" />

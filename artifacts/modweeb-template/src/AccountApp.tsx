@@ -1,16 +1,24 @@
-import { Switch, Route } from "wouter";
+import { useEffect } from "react";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import Preloader from "./components/Preloader";
 import Header from "./components/Header";
 import ContentWrapper from "./components/ContentWrapper";
 import Footer from "./components/Footer";
-import ProtectedRoute from "./components/ProtectedRoute";
-import LoginPage from "./pages/LoginPage";
 import AccountPage from "./pages/AccountPage";
 
-function AppShell() {
+function AccountShell() {
   const { theme } = useTheme();
+  const { isLoggedIn } = useAuth();
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      window.location.replace("/login.html");
+    }
+  }, [isLoggedIn]);
+
+  if (!isLoggedIn) return null;
+
   return (
     <div
       className={`standalone-page-container${theme === "dark" ? " dark-mode" : ""}`}
@@ -19,26 +27,22 @@ function AppShell() {
       <Preloader />
       <Header />
       <ContentWrapper>
-        <Switch>
-          <Route path="/login">
-            <LoginPage mode="spa" />
-          </Route>
-          <Route path="/account">
-            <ProtectedRoute component={AccountPage} />
-          </Route>
-          <Route>{/* home placeholder */}</Route>
-        </Switch>
+        <AccountPage
+          onLogout={() => {
+            window.location.href = "/login.html";
+          }}
+        />
       </ContentWrapper>
       <Footer />
     </div>
   );
 }
 
-export default function App() {
+export default function AccountApp() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppShell />
+        <AccountShell />
       </AuthProvider>
     </ThemeProvider>
   );
