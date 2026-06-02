@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
+import Logo from "../components/Logo";
 
 interface Session {
   id: number;
@@ -74,13 +75,17 @@ function saveSessions(sessions: Session[]) {
 
 interface AccountPageProps {
   onLogout?: () => void;
+  loginHref?: string;
 }
 
-export default function AccountPage({ onLogout }: AccountPageProps = {}) {
-  const { user, logout, updateProfile } = useAuth();
+export default function AccountPage({
+  onLogout,
+  loginHref = "/login.html",
+}: AccountPageProps = {}) {
+  const { isLoggedIn, user, logout, updateProfile } = useAuth();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [showSettings, setShowSettings] = useState(false);
-  const [editName, setEditName] = useState(user?.name || "");
+  const [editName, setEditName] = useState("");
   const [editPicUrl, setEditPicUrl] = useState("");
   const [toast, setToast] = useState("");
   const settingsRef = useRef<HTMLDivElement>(null);
@@ -91,6 +96,7 @@ export default function AccountPage({ onLogout }: AccountPageProps = {}) {
   }
 
   useEffect(() => {
+    if (!isLoggedIn) return;
     const existing = loadSessions();
     if (!existing.find((s) => s.isCurrent)) {
       const session: Session = {
@@ -111,7 +117,7 @@ export default function AccountPage({ onLogout }: AccountPageProps = {}) {
     } else {
       setSessions(existing);
     }
-  }, []);
+  }, [isLoggedIn]);
 
   useEffect(() => {
     function handleOutside(e: MouseEvent) {
@@ -136,8 +142,7 @@ export default function AccountPage({ onLogout }: AccountPageProps = {}) {
   function handleFileUpload(file: File) {
     const reader = new FileReader();
     reader.onload = (e) => {
-      const base64 = e.target?.result as string;
-      setEditPicUrl(base64);
+      setEditPicUrl(e.target?.result as string);
     };
     reader.readAsDataURL(file);
   }
@@ -158,13 +163,51 @@ export default function AccountPage({ onLogout }: AccountPageProps = {}) {
 
   function handleLogout() {
     logout();
-    if (onLogout) {
-      onLogout();
-    } else {
-      window.location.href = "/";
-    }
+    if (onLogout) onLogout();
   }
 
+  /* ────────── Guest Card ────────── */
+  if (!isLoggedIn) {
+    return (
+      <div className="account-page account-page--guest">
+        <div className="account-page__inner">
+          <div className="acct-card">
+            <div className="acct-card__content">
+              <div className="acct-guest">
+                <div className="acct-guest__icon">
+                  <Logo />
+                </div>
+                <h2 className="acct-guest__title">لم تقم بتسجيل الدخول بعد</h2>
+                <p className="acct-guest__subtitle">
+                  سجّل دخولك للوصول إلى حسابك وإدارة إعداداتك
+                </p>
+                <div className="acct-guest__actions">
+                  <a href={loginHref} className="acct-btn acct-btn--black">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                      <polyline points="10 17 15 12 10 7" />
+                      <line x1="15" y1="12" x2="3" y2="12" />
+                    </svg>
+                    تسجيل الدخول
+                  </a>
+                  <a href="/" className="acct-btn acct-btn--outline">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                      <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    الصفحة الرئيسية
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {toast && <div className="page-toast page-toast--active">{toast}</div>}
+      </div>
+    );
+  }
+
+  /* ────────── Logged-in Card ────────── */
   return (
     <div className="account-page">
       <div className="account-page__inner">
@@ -323,7 +366,10 @@ export default function AccountPage({ onLogout }: AccountPageProps = {}) {
             <div className="acct-card__divider" />
 
             <div className="acct-card__footer">
-              <button className="acct-btn acct-btn--outline" onClick={handleLogout}>
+              <button
+                className="acct-btn acct-btn--outline"
+                onClick={handleLogout}
+              >
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                   <polyline points="16 17 21 12 16 7" />
