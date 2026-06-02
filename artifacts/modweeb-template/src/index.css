@@ -334,10 +334,10 @@ body {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   font-size: 9px;
   color: var(--notifC);
-  padding: 6px 0;
+  padding: 4px 0;
 }
 
 .footer-info a {
@@ -357,10 +357,10 @@ body {
 /* Social links list */
 .footer-links {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   list-style: none;
   margin: 0;
-  padding: 6px 0;
+  padding: 4px 0;
 }
 
 .footer-links li a {
@@ -769,52 +769,33 @@ body {
 }
 
 /* Guest (not logged in) card */
-.acct-guest {
+.acct-guest__head {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 24px 16px 12px;
-  gap: 10px;
-}
-
-.acct-guest__icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--contentL);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 4px;
-  padding: 10px;
-}
-
-.dark-mode .acct-guest__icon {
-  background: rgba(255,255,255,0.07);
+  align-items: flex-end;
+  text-align: right;
+  gap: 5px;
+  padding-bottom: 2px;
 }
 
 .acct-guest__title {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--headC);
   margin: 0;
 }
 
 .acct-guest__subtitle {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--bodyC);
   margin: 0;
-  line-height: 1.55;
-  max-width: 280px;
+  line-height: 1.5;
 }
 
-.acct-guest__actions {
+.acct-guest__footer {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-  margin-top: 8px;
+  justify-content: flex-end;
+  padding-top: 2px;
 }
 
 /* Account Card */
@@ -1120,14 +1101,15 @@ body {
 .acct-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   border-radius: 8px;
   font-size: 12px;
   font-weight: 500;
-  padding: 6px 14px;
+  padding: 5px 12px;
   cursor: pointer;
   border: none;
   transition: all 0.2s;
+  text-decoration: none;
 }
 
 .acct-btn svg {

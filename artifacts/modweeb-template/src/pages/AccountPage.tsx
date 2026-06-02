@@ -173,31 +173,22 @@ export default function AccountPage({
         <div className="account-page__inner">
           <div className="acct-card">
             <div className="acct-card__content">
-              <div className="acct-guest">
-                <div className="acct-guest__icon">
-                  <Logo />
-                </div>
-                <h2 className="acct-guest__title">لم تقم بتسجيل الدخول بعد</h2>
+              <div className="acct-guest__head">
+                <b className="acct-guest__title">أنت لست مسجلاً</b>
                 <p className="acct-guest__subtitle">
-                  سجّل دخولك للوصول إلى حسابك وإدارة إعداداتك
+                  سجّل دخولك للوصول إلى بيانات حسابك وإدارة جلساتك.
                 </p>
-                <div className="acct-guest__actions">
-                  <a href={loginHref} className="acct-btn acct-btn--black">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                      <polyline points="10 17 15 12 10 7" />
-                      <line x1="15" y1="12" x2="3" y2="12" />
-                    </svg>
-                    تسجيل الدخول
-                  </a>
-                  <a href="/" className="acct-btn acct-btn--outline">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                      <polyline points="9 22 9 12 15 12 15 22" />
-                    </svg>
-                    الصفحة الرئيسية
-                  </a>
-                </div>
+              </div>
+              <div className="acct-card__divider" />
+              <div className="acct-guest__footer">
+                <a href={loginHref} className="acct-btn acct-btn--outline">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
+                  </svg>
+                  تسجيل الدخول
+                </a>
               </div>
             </div>
           </div>
