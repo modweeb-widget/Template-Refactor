@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
-import Logo from "../components/Logo";
 
 interface Session {
   id: number;
@@ -24,7 +23,7 @@ async function getIP(): Promise<string> {
   try {
     const res = await fetch("https://api.ipify.org?format=json");
     const data = await res.json();
-    return data.ip;
+    return (data as { ip: string }).ip;
   } catch {
     return "غير معروف";
   }
@@ -63,13 +62,13 @@ function formatDate(d: string | null): string {
 function loadSessions(): Session[] {
   try {
     const s = localStorage.getItem("userSessions");
-    return s ? JSON.parse(s) : [];
+    return s ? (JSON.parse(s) as Session[]) : [];
   } catch {
     return [];
   }
 }
 
-function saveSessions(sessions: Session[]) {
+function saveSessions(sessions: Session[]): void {
   localStorage.setItem("userSessions", JSON.stringify(sessions));
 }
 
@@ -88,6 +87,7 @@ export default function AccountPage({
   const [editName, setEditName] = useState("");
   const [editPicUrl, setEditPicUrl] = useState("");
   const [toast, setToast] = useState("");
+  const [copied, setCopied] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
   function showToast(msg: string) {
@@ -95,6 +95,7 @@ export default function AccountPage({
     setTimeout(() => setToast(""), 3000);
   }
 
+  /* ── Register current session once logged in ── */
   useEffect(() => {
     if (!isLoggedIn) return;
     const existing = loadSessions();
@@ -106,7 +107,7 @@ export default function AccountPage({
         ip: "جارٍ التحميل...",
         isCurrent: true,
       };
-      const updated = [...existing.filter((s) => !s.isCurrent), session];
+      const updated = [session, ...existing];
       saveSessions(updated);
       setSessions(updated);
       getIP().then((ip) => {
@@ -119,6 +120,7 @@ export default function AccountPage({
     }
   }, [isLoggedIn]);
 
+  /* ── Close settings panel on outside click ── */
   useEffect(() => {
     function handleOutside(e: MouseEvent) {
       if (
@@ -137,6 +139,14 @@ export default function AccountPage({
     saveSessions(updated);
     setSessions(updated);
     showToast("تم إزالة الجلسة بنجاح");
+  }
+
+  function handleCopyEmail() {
+    if (!user?.email) return;
+    navigator.clipboard.writeText(user.email).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   }
 
   function handleFileUpload(file: File) {
@@ -163,7 +173,9 @@ export default function AccountPage({
 
   function handleLogout() {
     logout();
-    if (onLogout) onLogout();
+    if (onLogout) {
+      onLogout();
+    }
   }
 
   /* ────────── Guest Card ────────── */
@@ -193,17 +205,21 @@ export default function AccountPage({
             </div>
           </div>
         </div>
-        {toast && <div className="page-toast page-toast--active">{toast}</div>}
       </div>
     );
   }
 
   /* ────────── Logged-in Card ────────── */
+  const currentSession = sessions.find((s) => s.isCurrent);
+  const olderSessions = sessions.filter((s) => !s.isCurrent);
+
   return (
     <div className="account-page">
       <div className="account-page__inner">
         <div className="acct-card">
           <div className="acct-card__content">
+
+            {/* ── Profile top ── */}
             <div className="acct-card__top">
               <div className="acct-card__avatar-wrap">
                 {user?.picture ? (
@@ -222,12 +238,32 @@ export default function AccountPage({
 
               <div className="acct-card__info">
                 <h2 className="acct-card__name">{user?.name}</h2>
-                <p className="acct-card__email">{user?.email}</p>
+                <div className="acct-card__email-row">
+                  <p className="acct-card__email">{user?.email}</p>
+                  <button
+                    className="acct-copy-btn"
+                    onClick={handleCopyEmail}
+                    title={copied ? "تم النسخ!" : "نسخ الإيميل"}
+                    aria-label="نسخ البريد الإلكتروني"
+                  >
+                    {copied ? (
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 <p className="acct-card__join">
                   انضم في: {formatDate(user?.joinDate || null)}
                 </p>
               </div>
 
+              {/* ── Settings button ── */}
               <div className="acct-card__actions" ref={settingsRef}>
                 <button
                   className="settings-btn"
@@ -265,7 +301,7 @@ export default function AccountPage({
                         تغيير الصورة:
                       </div>
                       <label className="settings-panel__label">
-                        (إما برفع صورة من جهازك)
+                        رفع صورة من جهازك:
                         <input
                           type="file"
                           accept="image/*"
@@ -279,7 +315,7 @@ export default function AccountPage({
                       </label>
                       <div className="settings-panel__divider" />
                       <label className="settings-panel__label">
-                        (أو بإضافة رابط مباشر للصورة)
+                        أو رابط مباشر للصورة:
                         <input
                           type="url"
                           className="settings-panel__input"
@@ -303,59 +339,87 @@ export default function AccountPage({
 
             <div className="acct-card__divider" />
 
+            {/* ── Sessions ── */}
             <div className="acct-card__sessions">
               <h3 className="acct-card__section-title">الجلسات النشطة</h3>
-              <ul className="acct-sessions">
-                {sessions.map((session, i) => (
-                  <li
-                    key={session.id}
-                    className={`acct-session${session.isCurrent ? " acct-session--current" : ""}`}
-                  >
-                    <div className="acct-session__icon">
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                        <line x1="8" y1="21" x2="16" y2="21" />
-                        <line x1="12" y1="17" x2="12" y2="21" />
-                      </svg>
-                    </div>
-                    <div className="acct-session__info">
-                      <div className="acct-session__os">
-                        {session.os}
-                        {session.isCurrent && (
-                          <span className="acct-session__badge">
-                            الجلسة الحالية
-                          </span>
-                        )}
-                      </div>
-                      <div className="acct-session__meta">
-                        IP: {session.ip} · {session.time}
-                      </div>
-                    </div>
-                    {!session.isCurrent && (
-                      <button
-                        className="acct-session__remove"
-                        onClick={() => removeSession(i)}
-                        aria-label="إزالة الجلسة"
-                        title="إزالة"
-                      >
+
+              {/* Current session */}
+              {currentSession && (
+                <div className="acct-sessions-group">
+                  <span className="acct-sessions-group__label acct-sessions-group__label--current">
+                    الجلسة الحالية
+                  </span>
+                  <ul className="acct-sessions">
+                    <li className="acct-session acct-session--current">
+                      <div className="acct-session__icon">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
-                          <line x1="18" y1="6" x2="6" y2="18" />
-                          <line x1="6" y1="6" x2="18" y2="18" />
+                          <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                          <line x1="8" y1="21" x2="16" y2="21" />
+                          <line x1="12" y1="17" x2="12" y2="21" />
                         </svg>
-                      </button>
-                    )}
-                  </li>
-                ))}
-                {sessions.length === 0 && (
-                  <li className="acct-session acct-session--empty">
-                    لا توجد جلسات مسجّلة.
-                  </li>
-                )}
-              </ul>
+                      </div>
+                      <div className="acct-session__info">
+                        <div className="acct-session__os">{currentSession.os}</div>
+                        <div className="acct-session__meta">
+                          IP: {currentSession.ip} · {currentSession.time}
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+              {/* Older sessions */}
+              {olderSessions.length > 0 && (
+                <div className="acct-sessions-group">
+                  <span className="acct-sessions-group__label">
+                    جلسات سابقة
+                  </span>
+                  <ul className="acct-sessions">
+                    {olderSessions.map((session, i) => (
+                      <li key={session.id} className="acct-session">
+                        <div className="acct-session__icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                            <line x1="8" y1="21" x2="16" y2="21" />
+                            <line x1="12" y1="17" x2="12" y2="21" />
+                          </svg>
+                        </div>
+                        <div className="acct-session__info">
+                          <div className="acct-session__os">{session.os}</div>
+                          <div className="acct-session__meta">
+                            IP: {session.ip} · {session.time}
+                          </div>
+                        </div>
+                        <button
+                          className="acct-session__remove"
+                          onClick={() =>
+                            removeSession(
+                              sessions.findIndex((s) => s.id === session.id)
+                            )
+                          }
+                          aria-label="إزالة الجلسة"
+                          title="إزالة"
+                        >
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                          </svg>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {sessions.length === 0 && (
+                <p className="acct-session--empty">لا توجد جلسات مسجّلة.</p>
+              )}
             </div>
 
             <div className="acct-card__divider" />
 
+            {/* ── Footer: logout ── */}
             <div className="acct-card__footer">
               <button
                 className="acct-btn acct-btn--outline"
@@ -369,6 +433,7 @@ export default function AccountPage({
                 تسجيل الخروج
               </button>
             </div>
+
           </div>
         </div>
       </div>

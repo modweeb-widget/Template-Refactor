@@ -2,6 +2,23 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "../context/AuthContext";
 
+function isStandalonePage(): boolean {
+  return window.location.pathname.endsWith(".html");
+}
+
+function goToPage(spaPath: string, navigate: (to: string) => void): void {
+  if (isStandalonePage()) {
+    const htmlMap: Record<string, string> = {
+      "/login": "/login.html",
+      "/account": "/account.html",
+      "/": "/",
+    };
+    window.location.href = htmlMap[spaPath] ?? spaPath;
+  } else {
+    navigate(spaPath);
+  }
+}
+
 export default function UserMenu() {
   const { user, isLoggedIn, logout } = useAuth();
   const [open, setOpen] = useState(false);
@@ -22,13 +39,14 @@ export default function UserMenu() {
     return (
       <button
         className="user-menu__login-btn"
-        onClick={() => navigate("/login")}
+        onClick={() => goToPage("/login", navigate)}
         aria-label="تسجيل الدخول"
         title="تسجيل الدخول"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+          <polyline points="10 17 15 12 10 7" />
+          <line x1="15" y1="12" x2="3" y2="12" />
         </svg>
       </button>
     );
@@ -85,7 +103,7 @@ export default function UserMenu() {
             role="menuitem"
             onClick={() => {
               setOpen(false);
-              navigate("/account");
+              goToPage("/account", navigate);
             }}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -101,7 +119,7 @@ export default function UserMenu() {
             onClick={() => {
               setOpen(false);
               logout();
-              navigate("/");
+              goToPage("/", navigate);
             }}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">

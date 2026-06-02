@@ -5,7 +5,6 @@ import Preloader from "./components/Preloader";
 import Header from "./components/Header";
 import ContentWrapper from "./components/ContentWrapper";
 import Footer from "./components/Footer";
-import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import AccountPage from "./pages/AccountPage";
 
@@ -24,7 +23,7 @@ function AppShell() {
             <LoginPage mode="spa" />
           </Route>
           <Route path="/account">
-            <ProtectedRoute component={AccountPage} />
+            <AccountPage loginHref="/login" />
           </Route>
           <Route>{/* home placeholder */}</Route>
         </Switch>
