@@ -1,5 +1,6 @@
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
+import UserMenu from "./UserMenu";
 
 export default function Header() {
   return (
@@ -15,7 +16,11 @@ export default function Header() {
           </div>
           <span className="header-title-text">Tools Modweeb</span>
         </a>
-        <ThemeToggle />
+
+        <div className="header-actions">
+          <UserMenu />
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );
