@@ -2,7 +2,6 @@
 
 /login.html
   Cache-Control: no-cache, no-store, must-revalidate
-  X-Frame-Options: ALLOWALL
   Content-Security-Policy: frame-ancestors *
 
 /account.html

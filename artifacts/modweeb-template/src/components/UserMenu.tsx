@@ -119,7 +119,7 @@ export default function UserMenu() {
             onClick={() => {
               setOpen(false);
               logout();
-              goToPage("/", navigate);
+              goToPage("/login", navigate);
             }}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
