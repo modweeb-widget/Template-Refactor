@@ -30,10 +30,9 @@ jobs:
         with:
           version: 9
 
-      - name: Install dependencies
-        run: |
-          pnpm add -g pnpm@9
-          pnpm install
+          - name: Install dependencies
+            run: |
+              pnpm install --no-frozen-lockfile
 
       - name: Build project
         run: BASE_PATH=/ pnpm run build
